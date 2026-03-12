@@ -11,3 +11,9 @@ Thumbs.db
 venv/
 env/
 .env
+.venv/
+
+# UV Related
+.python-version
+pyproject.toml
+uv.lock
