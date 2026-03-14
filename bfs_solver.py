@@ -71,24 +71,33 @@ def findStart(maze, start):
                 print(f"Start located at maze[{row}, {col}]")
                 return (row, col)
 
+# start: (row, col)
 def bfs(maze, start):
     visited = set()
     queue = [start]
     visited.add(start)
 
     while queue:
-        vertex = queue.pop(0)
-        print(f"Current Vertex: {vertex}")
+        vertex_row, vertex_col = queue.pop(0)
+        print(f"Current Vertex Coordinate: {vertex_row}, {vertex_col}")
 
-        for neighbor in maze[vertex]:
-            if neighbor not in visited:
-                visited.add(neighbor)
-                queue.append(neighbor)
+        for move_row, move_col in neighbors:
+            neighbor_row = vertex_row + move_row
+            neighbor_col = vertex_col + move_col
 
-              
+            if maze[neighbor_row][neighbor_col] not in visited:
+                visited.add((neighbor_row, neighbor_col))
+                queue.append((neighbor_row, neighbor_col))
+
+neighbors = [
+    (-1, 0),    # check row above
+    (1, 0),     # check row below
+    (0,-1),     # check col left
+    (0,1)       # check col right
+]      
 
 start = None
 maze = []
 intro(maze)
 findStart(maze, start)
-
+bfs(maze, start)
