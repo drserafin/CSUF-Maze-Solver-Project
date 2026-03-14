@@ -54,7 +54,7 @@ def outro():
 
 def readFile(maze):
     try:
-        with open('mazes/basic_maze.txt', 'r') as file:
+        with open('mazes/easy_maze.txt', 'r') as file:
             for line in file:
                 clean_line = line.replace('\n', '')
                 maze.append(list(clean_line))
@@ -64,7 +64,7 @@ def readFile(maze):
 
 
 # finds the location index of where the maze Starts
-def findStart(maze, start):
+def findStart(maze):
     for row in range(len(maze)):
         for col in range(len(maze[row])):
             if maze[row][col] == 'S':
@@ -85,9 +85,11 @@ def bfs(maze, start):
             neighbor_row = vertex_row + move_row
             neighbor_col = vertex_col + move_col
 
-            if maze[neighbor_row][neighbor_col] not in visited:
+            if (neighbor_row, neighbor_col) not in visited:
                 visited.add((neighbor_row, neighbor_col))
-                queue.append((neighbor_row, neighbor_col))
+
+                if maze[neighbor_row][neighbor_col] == '.':
+                    queue.append((neighbor_row, neighbor_col))
 
 neighbors = [
     (-1, 0),    # check row above
@@ -96,8 +98,7 @@ neighbors = [
     (0,1)       # check col right
 ]      
 
-start = None
 maze = []
 intro(maze)
-findStart(maze, start)
+start = findStart(maze)
 bfs(maze, start)
