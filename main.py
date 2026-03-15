@@ -1,12 +1,5 @@
 """
 main.py
-
-Application entry point for the Maze Solver.
-
-Responsibilities:
-- Initialize the Tkinter root window.
-- Launch the MazeApp controller.
-- Ensure the application starts in a maximized window state.
 """
 
 import tkinter as tk

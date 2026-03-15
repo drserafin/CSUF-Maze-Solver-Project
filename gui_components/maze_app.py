@@ -1,23 +1,16 @@
 """
 maze_app.py
-
-This module defines the main application controller for the Maze Solver.
-
-Responsibilities:
-- Initialize and manage the main Tkinter window and overall layout.
-- Coordinate UI components such as the navigation bar, maze grid, sidebar controls, and statistics panel.
-- Handle user interactions including maze size selection, algorithm selection, solving, and resetting.
-- Generate solvable mazes using the Recursive Backtracking algorithm.
-- Serve as the central controller connecting the UI with maze generation and future pathfinding algorithms (BFS/DFS).
 """
 
 import tkinter as tk
+from tkinter import filedialog, messagebox
 import random
+import time   
 from .styles import *
 from .navlink import NavLink
 from .maze_grid import MazeGrid
 from .stats_display import StatsDisplay
-
+from solvers.bfs_solver import solve_bfs
 
 class SidebarBox(tk.Frame):
     def __init__(self, parent, title):
@@ -47,6 +40,9 @@ class MazeApp:
         self.grid_data = []
         self.selected_algo = tk.StringVar(value="BFS")
         
+        # SESSION TRACKER: Prevents old solving loops from overlapping new ones
+        self.solve_id = 0 
+        
         self.setup_ui()
         self.root.after(200, self.generate_perfect_maze)
 
@@ -57,24 +53,26 @@ class MazeApp:
         body.pack(fill="both", expand=True, padx=10, pady=5)
 
         self.maze_grid = MazeGrid(body)
+        self.maze_grid.pack(side="left", fill="both", expand=True, padx=(0, 10))
         
         sidebar = tk.Frame(body, bg=BG_DARK, width=340)
         sidebar.pack(side="right", fill="y", padx=10, pady=10)
         sidebar.pack_propagate(False)
 
         src_box = SidebarBox(sidebar, "MAZE SOURCE")
-        StyledButton(src_box.content, "📋 Simple 11x11", lambda: self.set_size(11))
+        StyledButton(src_box.content, "📋 Simple 8x8", lambda: self.set_size(8))
         StyledButton(src_box.content, "📋 Medium 25x25", lambda: self.set_size(25))
+        StyledButton(src_box.content, "📋 No Solution", self.generate_unsolvable_maze)
         
         tk.Label(src_box.content, text="Adjust Maze Size", bg=BG_PANEL, fg=ACCENT_NEON, font=FONT_MAIN).pack(pady=(10,0))
         self.size_slider = tk.Scale(src_box.content, from_=11, to=61, orient="horizontal", bg=BG_PANEL, 
-                                   fg="white", highlightthickness=0, troughcolor=BORDER_COL,
-                                   command=lambda s: self.set_size(int(s)))
+                                    fg="white", highlightthickness=0, troughcolor=BORDER_COL,
+                                    command=lambda s: self.set_size(int(s)))
         self.size_slider.set(21)
         self.size_slider.pack(fill="x", pady=(0, 10))
         
         StyledButton(src_box.content, "⚡ Generate Perfect Maze", self.generate_perfect_maze)
-        StyledButton(src_box.content, "📤 Load from .txt", lambda: print("Load File"))
+        StyledButton(src_box.content, "📤 Load from .txt", self.load_from_file)
 
         algo_box = SidebarBox(sidebar, "ALGORITHM")
         
@@ -91,7 +89,7 @@ class MazeApp:
 
         tk.Label(algo_box.content, text="Animation Speed", bg=BG_PANEL, fg=ACCENT_NEON, font=FONT_MAIN).pack()
         self.speed_slider = tk.Scale(algo_box.content, from_=1, to=100, orient="horizontal", bg=BG_PANEL, 
-                                    fg="white", highlightthickness=0, troughcolor=BORDER_COL)
+                                     fg="white", highlightthickness=0, troughcolor=BORDER_COL)
         self.speed_slider.set(70)
         self.speed_slider.pack(fill="x", pady=(0, 10))
 
@@ -122,9 +120,10 @@ class MazeApp:
         self.generate_perfect_maze()
 
     def generate_perfect_maze(self):
-        self.grid_data = [[1 for _ in range(self.cols)] for _ in range(self.rows)]
+        self.solve_id += 1 # Kills existing solver loops
+        self.grid_data = [['#' for _ in range(self.cols)] for _ in range(self.rows)]
         stack, visited = [(0, 0)], set([(0, 0)])
-        self.grid_data[0][0] = 0
+        self.grid_data[0][0] = '.' 
         
         while stack:
             r, c = stack[-1]
@@ -136,27 +135,103 @@ class MazeApp:
             
             if neighbors:
                 nr, nc = random.choice(neighbors)
-                self.grid_data[r + (nr-r)//2][c + (nc-c)//2] = 0
-                self.grid_data[nr][nc] = 0
+                self.grid_data[r + (nr-r)//2][c + (nc-c)//2] = '.'
+                self.grid_data[nr][nc] = '.'
                 visited.add((nr, nc))
                 stack.append((nr, nc))
             else:
                 stack.pop()
         
-        self.grid_data[0][0], self.grid_data[self.rows-1][self.cols-1] = 2, 3
+        self.grid_data[0][0] = 'S'
+        self.grid_data[self.rows-1][self.cols-1] = 'E'
         self.stats.reset_stats()
         self.maze_grid.init_grid(self.grid_data, self.rows, self.cols)
+
+    def generate_unsolvable_maze(self):
+        self.solve_id += 1 # Kills existing solver loops
+        self.grid_data = [['.' for _ in range(self.cols)] for _ in range(self.rows)]
+        mid_col = self.cols // 2
+        for r in range(self.rows):
+            self.grid_data[r][mid_col] = '#' 
+        self.grid_data[0][0] = 'S'
+        self.grid_data[self.rows-1][self.cols-1] = 'E'
+        self.stats.reset_stats()
+        self.maze_grid.init_grid(self.grid_data, self.rows, self.cols)
+
+    def load_from_file(self):
+        file_path = filedialog.askopenfilename(
+            title="Select Maze File",
+            filetypes=(("Text Files", "*.txt"), ("All Files", "*.*"))
+        )
+        if not file_path: return 
+
+        try:
+            self.solve_id += 1 # Kills existing solver loops
+            with open(file_path, 'r') as file:
+                lines = [line.strip() for line in file.readlines() if line.strip()]
+            if not lines: raise ValueError("The file is empty.")
+
+            self.rows = len(lines)
+            self.cols = len(lines[0])
+            self.grid_data = [list(row) for row in lines]
+            self.stats.reset_stats()
+            self.maze_grid.init_grid(self.grid_data, self.rows, self.cols)
+        except Exception as e:
+            messagebox.showerror("Error Loading File", f"Could not load the maze:\n\n{str(e)}")
 
     def reset_maze(self):
         self.stats.reset_stats()
         self.generate_perfect_maze()
 
     def start_solver(self):
+        self.solve_id += 1 # NEW: Instantly expires old step() loops
         algo = self.selected_algo.get()
-        speed = self.speed_slider.get()
         self.stats.reset_stats()
         
+        # Visually clears the previous blue/gold paths
+        self.maze_grid.init_grid(self.grid_data, self.rows, self.cols)
+        
         if algo == "BFS":
-            print(f"Starting BFS with speed {speed}...")
+            self.run_bfs()  
         elif algo == "DFS":
-            print(f"Starting DFS with speed {speed}...")
+            pass # Someone else's work!
+
+    def run_bfs(self):
+        current_session = self.solve_id # Capture the ID at the moment BFS starts
+        bfs_generator = solve_bfs(self.grid_data, self.rows, self.cols)
+        start_time = time.time()
+        delay = int(105 - self.speed_slider.get())
+
+        def step():
+            # SAFETY: If solve_id changed, this loop is a zombie. Kill it.
+            if current_session != self.solve_id:
+                return 
+
+            try:
+                status, nodes_explored, data = next(bfs_generator)
+                self.stats.nodes.update(str(nodes_explored))
+
+                if status == "EXPLORING":
+                    r, c = data
+                    if self.grid_data[r][c] not in ('S', 'E'):
+                        self.maze_grid.draw_cell(r, c, 'X') 
+                    self.root.after(delay, step)
+
+                elif status == "FOUND":
+                    elapsed = (time.time() - start_time) * 1000
+                    self.stats.runtime.update(f"{elapsed:.2f} ms")
+                    self.stats.found.update("Yes", ACCENT_GREEN)
+                    self.stats.length.update(f"{len(data)} steps", ACCENT_GREEN)
+                    for r, c in data:
+                        if self.grid_data[r][c] not in ('S', 'E'):
+                            self.maze_grid.draw_cell(r, c, 'P') 
+
+                elif status == "NO_SOLUTION":
+                    elapsed = (time.time() - start_time) * 1000
+                    self.stats.runtime.update(f"{elapsed:.2f} ms")
+                    self.stats.found.update("No", COL_END)
+
+            except StopIteration:
+                pass 
+
+        step()

@@ -1,14 +1,4 @@
-"""
-styles.py
-
-This module centralizes all visual styling constants for the Maze Solver UI.
-
-Responsibilities:
-- Define the color palette used throughout the application.
-- Provide consistent font configurations for UI elements.
-- Standardize maze grid colors for walls, paths, start, end, and solution path.
-- Ensure visual consistency across all UI components.
-"""
+# --- styles.py ---
 
 # Main UI Colors
 BG_DARK = "#1A1A1A"
@@ -17,15 +7,16 @@ BORDER_COL = "#494949"
 TEXT_GRAY = "#ffffff"
 
 # Accent Colors
-ACCENT_GREEN = "#00FF33"
+ACCENT_GREEN = "#55FF77"
 ACCENT_NEON = "#00ffaa"
 
 # Maze Grid Colors
-COL_TILE = "#AEAEAE"
-COL_WALL = "#232323"
-COL_START = "#2ea043"
-COL_END = "#da3633"
+COL_TILE = "#858585"
+COL_WALL = "#2E2E2E"
+COL_START = "#22EB9B"
+COL_END = "#FF3366"
 COL_PATH = "#d29922"
+COL_EXPLORED = "#286086"
 
 # Fonts
 FONT_MAIN = ("Arial", 10)

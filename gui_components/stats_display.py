@@ -1,15 +1,5 @@
 """
 stats_display.py
-
-This module is responsible for displaying algorithm results and performance
-statistics for the Maze Solver application.
-
-Responsibilities:
-- Render a structured results panel in the UI.
-- Display key metrics from maze solving algorithms (algorithm used, path found,
-  path length, nodes explored, runtime).
-- Provide reusable UI rows for statistic entries.
-- Allow dynamic updating and resetting of displayed algorithm results.
 """
 
 import tkinter as tk
@@ -18,13 +8,17 @@ from .styles import *
 class ResultLine(tk.Frame):
     def __init__(self, parent, icon, label, initial_val, val_color):
         super().__init__(parent, bg=BG_PANEL)
-        self.pack(fill="x", pady=10)
         
+        # THE FIX: Remove 'pady' entirely and add 'expand=True'
+        self.pack(fill="x", expand=True) 
+        
+        # Icon and Label on the left
         tk.Label(self, text=f"{icon} {label}", bg=BG_PANEL, fg=TEXT_GRAY, font=FONT_MAIN).pack(side="left")
         
+        # Value on the right
         self.val_lbl = tk.Label(self, text=initial_val, bg=BG_PANEL, fg=val_color, font=FONT_MONO)
         self.val_lbl.pack(side="right")
-
+        
     def update(self, new_val, new_color=None):
         self.val_lbl.config(text=new_val)
         if new_color is not None:

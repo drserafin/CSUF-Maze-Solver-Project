@@ -1,82 +1,81 @@
 """
 maze_grid.py
-
-This module defines the MazeGrid UI component responsible for rendering
-and updating the maze visualization.
-
-Responsibilities:
-- Render the maze grid on a Tkinter canvas.
-- Convert maze data (walls, paths, start, end, solution) into colored tiles.
-- Automatically scale and center the maze when the window is resized.
-- Provide efficient updates to grid cells during algorithm visualization.
 """
 
 import tkinter as tk
 from .styles import *
 
 class MazeGrid(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, bg=BG_DARK, highlightthickness=1, highlightbackground=BORDER_COL)
-        self.pack(side="left", fill="both", expand=True, padx=20, pady=20)
-        
-        self.canvas = tk.Canvas(self, bg=BG_DARK, highlightthickness=0, bd=0)
-        self.canvas.pack(fill="both", expand=True)
-        
-        self.last_data, self.last_rows, self.last_cols = None, 21, 21
-        self.rect_ids = []
-        self.canvas.bind("<Configure>", lambda e: self.init_grid(self.last_data, self.last_rows, self.last_cols))
+    def __init__(self, master):
+        super().__init__(master, bg=BG_DARK, highlightbackground=BORDER_COL, highlightthickness=1)
+        self.canvas = tk.Canvas(self, bg=BG_DARK, highlightthickness=0)
+        self.canvas.pack(fill="both", expand=True, padx=20, pady=20)
+        self.grid_data = []
+        self.rows = 0
+        self.cols = 0
+        self.canvas.bind("<Configure>", self.draw)
 
     def init_grid(self, grid_data, rows, cols):
-        if grid_data is None: 
-            return
+        self.grid_data = grid_data
+        self.rows = rows
+        self.cols = cols
+        self.draw()
 
-        self.last_data, self.last_rows, self.last_cols = grid_data, rows, cols
+    def get_color(self, char):
+        if char == 'S': return COL_START
+        if char == 'E': return COL_END
+        if char == '#': return COL_WALL
+        if char == '.': return COL_TILE
+        if char == 'X': return COL_EXPLORED
+        if char == 'P': return COL_PATH
+        return BG_DARK
+
+    def draw(self, event=None):
+        if not self.grid_data or self.rows == 0: return
         self.canvas.delete("all")
         
-        self.update_idletasks()
-        w, h = self.canvas.winfo_width(), self.canvas.winfo_height()
-        if w <= 10: 
-            return 
+        canvas_w = self.canvas.winfo_width()
+        canvas_h = self.canvas.winfo_height()
+        
+        MAX_CELL_SIZE = 100 
+        cell_size = min(canvas_w / self.cols, canvas_h / self.rows, MAX_CELL_SIZE)
+        
+        padding = 4 
+        inner_size = cell_size - padding
+        
+        maze_block_w = cell_size * self.cols
+        maze_block_h = cell_size * self.rows
+        
+        start_x = (canvas_w - maze_block_w) / 2
+        start_y = (canvas_h - maze_block_h) / 2
 
-        self.cell_size = min(w / cols, h / rows)
-        self.ox = (w - (cols * self.cell_size)) / 2
-        self.oy = (h - (rows * self.cell_size)) / 2
-
-        self.rect_ids = [[None for _ in range(cols)] for _ in range(rows)]
-
-        for r in range(rows):
-            for c in range(cols):
-                val = grid_data[r][c]
-
-                color = COL_TILE if val == 0 else COL_WALL
-                if val == 2: 
-                    color = COL_START
-                elif val == 3: 
-                    color = COL_END
-                elif val == 4: 
-                    color = COL_PATH
+        for r in range(self.rows):
+            for c in range(self.cols):
+                char = self.grid_data[r][c]
+                color = self.get_color(char)
                 
-                x1 = self.ox + (c * self.cell_size)
-                y1 = self.oy + (r * self.cell_size)
-                x2 = x1 + self.cell_size
-                y2 = y1 + self.cell_size
-
-                self.rect_ids[r][c] = self.canvas.create_rectangle(
-                    x1, y1, x2, y2, fill=color, outline="#1c2128"
+                x1 = start_x + (c * cell_size) + (padding / 2)
+                y1 = start_y + (r * cell_size) + (padding / 2)
+                x2 = x1 + inner_size
+                y2 = y1 + inner_size
+                
+                self.canvas.create_rectangle(
+                    x1, y1, x2, y2,
+                    fill=color, 
+                    outline=BORDER_COL if char == '#' else "", 
+                    width=1, 
+                    tags=f"cell_{r}_{c}"
                 )
+                
+                if char == 'S':
+                    self.canvas.create_text((x1+x2)/2, (y1+y2)/2, text="S", 
+                                          fill="black", font=("Arial", int(inner_size/2.5), "bold"))
+                elif char == 'E':
+                    self.canvas.create_text((x1+x2)/2, (y1+y2)/2, text="E", 
+                                          fill="white", font=("Arial", int(inner_size/2.5), "bold"))
 
-    def update_all(self, grid_data):
-        for r in range(len(grid_data)):
-            for c in range(len(grid_data[0])):
-                val = grid_data[r][c]
-
-                color = COL_TILE if val == 0 else COL_WALL
-                if val == 2: 
-                    color = COL_START
-                elif val == 3: 
-                    color = COL_END
-                elif val == 4: 
-                    color = COL_PATH
-
-                if self.rect_ids:
-                    self.canvas.itemconfig(self.rect_ids[r][c], fill=color)
+    def draw_cell(self, r, c, char):
+        """Updates a single cell visually for real-time algorithm animation."""
+        color = self.get_color(char)
+        # Updates the existing rectangle by its unique tag
+        self.canvas.itemconfig(f"cell_{r}_{c}", fill=color)
