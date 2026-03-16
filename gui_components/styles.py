@@ -1,8 +1,8 @@
 # --- styles.py ---
 
 # Main UI Colors
-BG_DARK = "#1A1A1A"
-BG_PANEL = "#222222"
+BG_DARK = "#222222"
+BG_PANEL = "#363636"
 BORDER_COL = "#494949"
 TEXT_GRAY = "#ffffff"
 
@@ -19,7 +19,7 @@ COL_PATH = "#d29922"
 COL_EXPLORED = "#286086"
 
 # Fonts
-FONT_MAIN = ("Arial", 10)
-FONT_BOLD = ("Arial", 10, "bold")
-FONT_TITLE = ("Arial", 18, "bold")
-FONT_MONO = ("Courier New", 10, "bold")
+FONT_MAIN = ("Arial", 13)
+FONT_BOLD = ("Arial", 13, "bold")
+FONT_TITLE = ("Arial", 20, "bold")
+FONT_MONO = ("Courier New", 13, "bold")
