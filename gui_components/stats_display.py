@@ -16,8 +16,8 @@ class ResultLine(tk.Frame):
     def __init__(self, parent, icon, label, initial_val, val_color):
         super().__init__(parent, bg=BG_PANEL)
         
-        # Standard vertical spacing between stat rows
-        self.pack(fill="x", pady=8) 
+        # OPTIMIZED: Changed from 8 to 6 for a slightly tighter, sleeker look
+        self.pack(fill="x", pady=6) 
         
         # Left Side: Icon and Label
         tk.Label(
@@ -29,7 +29,6 @@ class ResultLine(tk.Frame):
         ).pack(side="left")
         
         # Right Side: The actual value (e.g., "0.1400 ms")
-        # Note: We use side="right" to create a clean column on the edge of the panel.
         self.val_lbl = tk.Label(
             self, 
             text=initial_val, 
@@ -57,14 +56,14 @@ class StatsDisplay(tk.Frame):
         self.container = tk.Frame(self, bg=BG_PANEL)
         self.container.pack(fill="both", expand=True, padx=15, pady=15)
 
-        # Section Header
+        # Section Header (OPTIMIZED: Changed bottom padding from 10 to 8)
         tk.Label(
             self.container, 
             text="RESULTS", 
             font=FONT_BOLD, 
             bg=BG_PANEL, 
             fg=TEXT_GRAY
-        ).pack(anchor="w", pady=(0, 10))
+        ).pack(anchor="w", pady=(0, 8))
 
         # Individual Metric Rows
         self.algo = ResultLine(self.container, "⚙️", "Algorithm", "BFS", ACCENT_NEON)

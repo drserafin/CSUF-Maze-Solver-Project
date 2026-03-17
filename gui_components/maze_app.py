@@ -60,12 +60,39 @@ class MazeApp:
         self.maze_grid = MazeGrid(body)
         self.maze_grid.pack(side="left", fill="both", expand=True, padx=(0, 10))
 
-        # RIGHT SIDE: The Sidebar Control Panel
-        sidebar = tk.Frame(body, bg=BG_DARK)
-        sidebar.pack(side="right", fill="y", padx=10, pady=5)
-        
-        # Invisible spacer to maintain a clean, consistent sidebar width
-        tk.Frame(sidebar, width=400, height=1, bg=BG_DARK).pack()
+        # --- RIGHT SIDE: The Scrollable Sidebar Control Panel ---
+        sidebar_container = tk.Frame(body, bg=BG_DARK)
+        sidebar_container.pack(side="right", fill="y", padx=10, pady=5)
+
+        # Create Canvas and Scrollbar
+        canvas = tk.Canvas(sidebar_container, bg=BG_DARK, highlightthickness=0, width=400)
+        scrollbar = tk.Scrollbar(sidebar_container, orient="vertical", command=canvas.yview)
+
+        # The actual frame that holds the buttons and stats
+        sidebar = tk.Frame(canvas, bg=BG_DARK)
+        sidebar_id = canvas.create_window((0, 0), window=sidebar, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Update the scroll region when the sidebar contents change size
+        def on_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+            canvas.itemconfig(sidebar_id, width=event.width)
+
+        sidebar.bind("<Configure>", on_configure)
+
+        # Enable mouse wheel scrolling when hovering over the sidebar
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            
+        canvas.bind("<Enter>", lambda _: canvas.bind_all("<MouseWheel>", _on_mousewheel))
+        canvas.bind("<Leave>", lambda _: canvas.unbind_all("<MouseWheel>"))
+
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        # Invisible spacer to maintain width (380 to account for scrollbar width)
+        tk.Frame(sidebar, width=380, height=1, bg=BG_DARK).pack()
+        # --------------------------------------------------------
 
         # --- SECTION 1: MAZE SOURCE ---
         src_box = SidebarBox(sidebar, "MAZE SOURCE")
