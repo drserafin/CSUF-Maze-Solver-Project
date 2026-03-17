@@ -237,7 +237,7 @@ class MazeApp:
         if algo == "BFS":
             path, explored_nodes, runtime = solve_bfs(self.grid_data)
         elif algo == "DFS":
-    path, explored_nodes, runtime = solve_dfs(self.grid_data)
+            path, explored_nodes, runtime = solve_dfs(self.grid_data)
             
 
         # 2. UPDATE STATIC STATS
