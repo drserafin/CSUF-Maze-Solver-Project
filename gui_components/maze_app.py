@@ -23,6 +23,7 @@ from .ui_components import SidebarBox, StyledButton
 
 # Backend Algorithm Imports
 from solvers.bfs_solver import solve_bfs
+from solvers.dfs_solver import solve_dfs
 from .maze_generator import create_perfect_maze, create_unsolvable_maze
 
 class MazeApp:
@@ -236,8 +237,8 @@ class MazeApp:
         if algo == "BFS":
             path, explored_nodes, runtime = solve_bfs(self.grid_data)
         elif algo == "DFS":
-            print("DFS not yet implemented.")
-            return
+    path, explored_nodes, runtime = solve_dfs(self.grid_data)
+            
 
         # 2. UPDATE STATIC STATS
         self.stats.nodes.update(str(len(explored_nodes)))
