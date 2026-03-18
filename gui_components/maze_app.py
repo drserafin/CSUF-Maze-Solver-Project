@@ -5,7 +5,7 @@ Main GUI controller for the CSUF Maze Solver application.
 
 Responsibilities:
 - Orchestrates the UI layout using custom components.
-- Manages the state of the maze grid (loading, generation, and resizing).
+- Manages the state of the maze grid (loading, generation, axnd resizing).
 - Interfaces with backend solvers (BFS) and generators.
 - Handles real-time animation of search algorithms while preserving 
   UI responsiveness via Tkinter's 'after' loop.
